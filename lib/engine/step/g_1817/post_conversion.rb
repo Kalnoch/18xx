@@ -21,7 +21,10 @@ module Engine
 
         def process_buy_shares(action)
           player = action.entity
+          unshort = player.percent_of(corporation).negative?
           buy_shares(player, action.bundle)
+          @game.unshort(player, action.bundle.shares[0]) if unshort
+
           player.pass! if !corporation.president?(player.owner) || !can_buy_any?(player)
         end
 
@@ -43,7 +46,7 @@ module Engine
           return unless bundle
 
           corporation == bundle.corporation &&
-            bundle.owner != @game.bank &&
+            bundle.owner != @game.share_pool &&
             entity.cash >= bundle.price &&
             can_gain?(entity, bundle)
         end
@@ -68,7 +71,8 @@ module Engine
         def active_entities
           return [] unless corporation
 
-          [@game.players.rotate(@game.players.index(corporation.owner)).find(&:active?)].compact
+          [@game.players.rotate(@game.players.index(corporation.owner))
+          .select { |p| p.active? && can_buy_any?(p) }.first].compact
         end
       end
     end

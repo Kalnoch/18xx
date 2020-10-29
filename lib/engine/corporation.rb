@@ -22,9 +22,9 @@ module Engine
     include ShareHolder
     include Spender
 
-    attr_accessor :ipoed, :share_price, :par_via_exchange, :max_ownership_percent
+    attr_accessor :ipoed, :par_via_exchange, :max_ownership_percent, :float_percent
     attr_reader :capitalization, :companies, :min_price, :name, :full_name, :fraction_shares
-    attr_writer :par_price
+    attr_writer :par_price, :share_price
 
     SHARES = ([20] + Array.new(8, 10)).freeze
 
@@ -48,6 +48,7 @@ module Engine
 
       @cash = 0
       @capitalization = opts[:capitalization] || :full
+      @closed = false
       @float_percent = opts[:float_percent] || 60
       @max_ownership_percent = opts[:max_ownership_percent] || 60
       @min_price = opts[:min_price]
@@ -61,8 +62,9 @@ module Engine
 
     def <=>(other)
       # corporation with higher share price, farthest on the right, and first position on the share price goes first
-      sp = share_price
-      ops = other.share_price
+      return 1 unless (sp = share_price)
+      return -1 unless (ops = other.share_price)
+
       [ops.price, ops.coordinates.last, -ops.coordinates.first, -ops.corporations.find_index(other)] <=>
       [sp.price, sp.coordinates.last, -sp.coordinates.first, -sp.corporations.find_index(self)]
     end
@@ -84,7 +86,15 @@ module Engine
       !@ipoed
     end
 
+    def share_price
+      return if closed?
+
+      @share_price
+    end
+
     def par_price
+      return if closed?
+
       @always_market_price ? @share_price : @par_price
     end
 
@@ -157,11 +167,7 @@ module Engine
     end
 
     def all_abilities
-      all = @companies.flat_map(&:all_abilities)
-      @abilities.each do |ability|
-        abilities(ability.type) { |a| all << a }
-      end
-      all
+      @companies.flat_map(&:all_abilities) + @abilities
     end
 
     def remove_ability(ability)
@@ -212,6 +218,17 @@ module Engine
       transferred = ownables.dup
       ownables.clear
       transferred
+    end
+
+    def closed?
+      @closed
+    end
+
+    def close!
+      share_price&.corporations&.delete(self)
+      @closed = true
+      @ipoed = false
+      @owner = nil
     end
   end
 end

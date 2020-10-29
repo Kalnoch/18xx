@@ -333,31 +333,31 @@ module Engine
   "market": [
     [
       "0c",
-      "7",
-      "14",
-      "20",
-      "26",
-      "31",
-      "36",
-      "40",
-      "44",
-      "47",
-      "50",
-      "52",
+      "7i",
+      "14i",
+      "20i",
+      "26i",
+      "31i",
+      "36i",
+      "40r",
+      "44r",
+      "47r",
+      "50r",
+      "52r",
       "54p",
-      "56",
+      "56r",
       "58p",
-      "60",
+      "60r",
       "62p",
-      "65",
+      "65r",
       "68p",
-      "71",
+      "71r",
       "74p",
-      "78",
+      "78r",
       "82p",
-      "86",
+      "86r",
       "90p",
-      "95",
+      "95r",
       "100p",
       "105",
       "110",
@@ -367,25 +367,25 @@ module Engine
       "134",
       "142",
       "150",
-      "158",
-      "166",
-      "174",
-      "182",
-      "191",
-      "200",
-      "210",
-      "220",
-      "230",
-      "240",
-      "250",
-      "260",
-      "270",
-      "280",
-      "290",
-      "300",
-      "310",
-      "320",
-      "330",
+      "158i",
+      "166i",
+      "174i",
+      "182i",
+      "191i",
+      "200i",
+      "210i",
+      "220i",
+      "230i",
+      "240i",
+      "250i",
+      "260i",
+      "270i",
+      "280i",
+      "290i",
+      "300i",
+      "310i",
+      "320i",
+      "330i",
       "340e"
     ]
   ],
@@ -463,6 +463,7 @@ module Engine
       "sym": "C&N",
       "name": "Cowes & Newport",
       "logo": "1860/CN",
+      "float_percent": 50,
       "tokens": [
         0,
         40,
@@ -470,13 +471,14 @@ module Engine
         100
       ],
       "coordinates": "F2",
-      "color": "lightBlue",
+      "color": "deepskyblue",
       "text_color": "black"
     },
     {
       "sym": "IOW",
       "name": "Isle of Wight",
       "logo": "1860/IOW",
+      "float_percent": 50,
       "tokens": [
         0,
         40,
@@ -490,6 +492,7 @@ module Engine
       "sym": "IWNJ",
       "name": "Isle of Wight, Newport Juntion",
       "logo": "1860/IWNJ",
+      "float_percent": 50,
       "tokens": [
         0,
         40,
@@ -502,6 +505,7 @@ module Engine
       "sym": "FYN",
       "name": "Freshwater, Yarmouth & Newport",
       "logo": "1860/FYN",
+      "float_percent": 50,
       "tokens": [
         0,
         40,
@@ -514,6 +518,7 @@ module Engine
       "sym": "NGStL",
       "name": "Newport, Godshill & St. Lawrence",
       "logo": "1860/NGStL",
+      "float_percent": 50,
       "tokens": [
         0,
         40
@@ -526,34 +531,38 @@ module Engine
       "sym": "BHI&R",
       "name": "Brading Harbour Improvement & Railway",
       "logo": "1860/BHIR",
+      "float_percent": 50,
       "tokens": [
         0,
         40
       ],
       "coordinates": "L6",
-      "color": "pink"
+      "color": "darkmagenta"
     },
     {
       "sym": "S&C",
       "name": "Shanklin & Chale",
       "logo": "1860/SC",
+      "float_percent": 50,
       "tokens": [
         0,
         40
       ],
       "coordinates": "F12",
-      "color": "violet"
+      "color": "darkblue"
     },
     {
       "sym": "VYSC",
       "name": "Ventor, Yarmouth & South Coast",
       "logo": "1860/VYSC",
+      "float_percent": 50,
       "tokens": [
         0,
         40
       ],
       "coordinates": "E9",
-      "color": "brightGreen"
+      "color": "yellowgreen",
+      "text_color": "black"
     }
   ],
   "trains": [

@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative '../config/game/g_18_co'
+require_relative '../g_18_co/stock_market'
 require_relative 'base'
 require_relative 'company_price_50_to_150_percent'
 
@@ -37,6 +38,32 @@ module Engine
 
       IPO_NAME = 'Treasury'
 
+      # First 3 are Denver, Second 3 are CO Springs
+      TILES_FIXED_ROTATION = %w[co1 co2 co3 co5 co6 co7].freeze
+
+      PAR_FLOAT_GROUPS = {
+        20 => %w[X],
+        40 => %w[C B A],
+        50 => %w[B A],
+        60 => %w[A],
+      }.freeze
+
+      PAR_PRICE_GROUPS = {
+        'X' => [75],
+        'C' => [40, 50, 60, 75],
+        'B' => [80, 90, 100, 110],
+        'A' => [120, 135, 145, 160],
+      }.freeze
+
+      PAR_GROUP_FLOATS = {
+        'X' => 20,
+        'C' => 40,
+        'B' => 50,
+        'A' => 60,
+      }.freeze
+
+      EAST_HEXES = %w[A26 J26 E27 G27].freeze
+
       EVENTS_TEXT = Base::EVENTS_TEXT.merge(
           'remove_mines' => ['Mines Close', 'Mine tokens removed from board and corporations']
         ).freeze
@@ -53,6 +80,14 @@ module Engine
         train = @depot.upcoming[0]
         train.buyable = false
         dsng.buy_train(train, :free)
+      end
+
+      def init_stock_market
+        Engine::G18CO::StockMarket.new(
+          self.class::MARKET,
+          self.class::CERT_LIMIT_COLORS,
+          multiple_buy_colors: self.class::MULTIPLE_BUY_COLORS
+        )
       end
 
       def operating_round(round_num)
@@ -73,14 +108,46 @@ module Engine
       def stock_round
         Round::Stock.new(self, [
         Step::DiscardTrain,
-        Step::BuySellParShares,
+        Step::G18CO::BuySellParShares,
         ])
       end
 
-      def routes_revenue(routes)
-        total_revenue = super
-        # TODO: East/SLC Bonus
-        total_revenue
+      def new_auction_round
+        Round::Auction.new(self, [
+          Step::G18CO::CompanyPendingPar,
+          Step::WaterfallAuction,
+        ])
+      end
+
+      def revenue_for(route, stops)
+        revenue = super
+
+        revenue += east_west_bonus(stops)[:revenue]
+
+        revenue
+      end
+
+      def east_west_bonus(stops)
+        bonus = { revenue: 0 }
+
+        east = stops.find { |stop| EAST_HEXES.include?(stop.hex.name) }
+        west = stops.find { |stop| stop.hex.name == 'E1' }
+
+        if east && west
+          bonus[:revenue] = 100
+          bonus[:description] = 'E/W'
+        end
+
+        bonus
+      end
+
+      def revenue_str(route)
+        str = super
+
+        bonus = east_west_bonus(route.stops)[:description]
+        str += " + #{bonus}" if bonus
+
+        str
       end
 
       def all_potential_upgrades(tile, tile_manifest: false)
@@ -103,10 +170,46 @@ module Engine
         end
       end
 
-      private
+      def sell_shares_and_change_price(bundle)
+        corporation = bundle.corporation
+        price = corporation.share_price.price
+        was_president = corporation.president?(bundle.owner)
+        @share_pool.sell_shares(bundle)
 
-      def route_bonus(route, type)
-        # TODO: East / SLC Bonus
+        return if !was_president && bundle.num_shares == 1
+
+        bundle.num_shares.times { @stock_market.move_down(corporation) }
+
+        log_share_price(corporation, price) if self.class::SELL_MOVEMENT != :none
+      end
+
+      def legal_tile_rotation?(_entity, _hex, tile)
+        return false if TILES_FIXED_ROTATION.include?(tile.name) && tile.rotation != 0
+
+        super
+      end
+
+      # Reduce the list of par prices available to just those corresponding to the corporation group
+      def par_prices(corporation)
+        par_nodes = @stock_market.par_prices
+        available_par_groups = PAR_FLOAT_GROUPS[corporation.float_percent]
+        available_par_prices = PAR_PRICE_GROUPS.values_at(*available_par_groups).flatten
+        par_nodes.select { |par_node| available_par_prices.include?(par_node.price) }
+      end
+
+      # Higher valued par groups require more shares to float. The float percent is adjusted upon parring.
+      def par_change_float_percent(corporation)
+        PAR_PRICE_GROUPS.each do |key, prices|
+          next unless PAR_FLOAT_GROUPS[corporation.float_percent].include?(key)
+          next unless prices.include?(corporation.par_price.price)
+
+          if corporation.float_percent != PAR_GROUP_FLOATS[key]
+            corporation.float_percent = PAR_GROUP_FLOATS[key]
+            @log << "#{corporation.name} now requires #{corporation.float_percent}% to float"
+          end
+
+          break
+        end
       end
     end
   end

@@ -6,8 +6,8 @@ require_relative 'base'
 require_relative 'company_price_50_to_150_percent'
 module Engine
   module Game
-    class G18MEX < Base
-      load_from_json(Config::Game::G18MEX::JSON)
+    class G18Mex < Base
+      load_from_json(Config::Game::G18Mex::JSON)
       AXES = { x: :number, y: :letter }.freeze
 
       DEV_STAGE = :alpha
@@ -19,6 +19,8 @@ module Engine
       GAME_END_CHECK = { bankrupt: :immediate, stock_market: :current_or, bank: :current_or }.freeze
 
       IPO_RESERVED_NAME = 'Trade-in'
+
+      TRACK_RESTRICTION = :city_permissive
 
       STANDARD_GREEN_CITY_TILES = %w[14 15 619].freeze
       CURVED_YELLOW_CITY = %w[5 6].freeze
@@ -35,6 +37,15 @@ module Engine
       ).merge(
         'ndm_unavailable' => ['NdM unavailable', 'NdM shares unavailable during stock round'],
       ).freeze
+
+      OPTIONAL_RULES = [
+        { sym: :triple_yellow_first_or,
+          short_name: 'Extra yellow',
+          desc: '8a: Allow corporation to lay 3 yellows its first OR' },
+        { sym: :hard_rust_t4,
+          short_name: 'Hard rust',
+          desc: '8d: Hard rust for 4 trains' },
+      ].freeze
 
       def p2_company
         @p2_company ||= company_by_id('KCMO')
@@ -100,15 +111,6 @@ module Engine
           minor.float!
         end
 
-        # TODO: Can neutral be removed? Move shares to market instead
-        # before deleting them.
-        @neutral = Corporation.new(
-          sym: 'N',
-          name: 'Neutral',
-          tokens: [],
-        )
-        @neutral.owner = @bank
-
         @brown_g_tile ||= @tiles.find { |t| t.name == '480' }
         @gray_tile ||= @tiles.find { |t| t.name == '455' }
         @green_l_tile ||= @tiles.find { |t| t.name == '475' }
@@ -129,34 +131,41 @@ module Engine
 
         # Remember the price for the last token; exchange tokens have the same.
         @ndm_exchange_token_price = ndm.tokens.last.price
+
+        @recently_floated = []
+        change_4t_to_hardrust if @optional_rules&.include?(:hard_rust_t4)
       end
 
       def init_share_pool
-        Engine::G18MEX::SharePool.new(self)
+        Engine::G18Mex::SharePool.new(self)
       end
 
       def operating_round(round_num)
         Round::Operating.new(self, [
           Step::Bankrupt,
-          Step::G18MEX::Assign,
+          Step::G18Mex::Assign,
           Step::DiscardTrain,
           Step::BuyCompany,
           Step::HomeToken,
-          Step::G18MEX::Merge,
-          Step::G18MEX::SpecialTrack,
-          Step::G18MEX::Track,
+          Step::G18Mex::Merge,
+          Step::G18Mex::SpecialTrack,
+          Step::G18Mex::Track,
           Step::Token,
           Step::Route,
-          Step::G18MEX::Dividend,
-          Step::G18MEX::SingleDepotTrainBuy,
+          Step::G18Mex::Dividend,
+          Step::G18Mex::SingleDepotTrainBuy,
           [Step::BuyCompany, blocks: true],
         ], round_num: round_num)
+      end
+
+      def or_round_finished
+        @recently_floated = []
       end
 
       def stock_round
         Round::Stock.new(self, [
           Step::DiscardTrain,
-          Step::G18MEX::BuySellParShares,
+          Step::G18Mex::BuySellParShares,
         ])
       end
 
@@ -165,6 +174,12 @@ module Engine
           matching_company = @companies.find { |company| company.sym == minor.name }
           minor.owner = matching_company.owner
         end if @turn == 1
+        super
+      end
+
+      def float_corporation(corporation)
+        @recently_floated << corporation
+
         super
       end
 
@@ -260,7 +275,6 @@ module Engine
           p.shares_of(major).dup.each do |s|
             next unless s
 
-            remove_share(major, s)
             if s.president
               # Rule 5d: Give owner of presidency share (if any) the reserved share
               # Might trigger presidency change in NdM
@@ -269,6 +283,11 @@ module Engine
               bank.spend(refund, p) if refund.positive?
               refund_count += 1
             end
+            s.transfer(major)
+          end
+          # Transfer bank pool shares to IPO
+          @share_pool.shares_of(major).dup.each do |s|
+            s.transfer(major)
           end
           if refund_count.positive?
             @log << "#{p.name} receives #{format_currency(refund * refund_count)} in share compensation"
@@ -317,7 +336,7 @@ module Engine
         end
         major.tokens.select(&:city).dup.each do |t|
           if ndm.tokens.find { |n| n.city == t.city }
-            @log << "#{major.name}'s token in #{t.city.name} is removed as #{ndm.name} already has a token there"
+            @log << "#{major.name}'s token in #{t.city.hex.name} is removed as #{ndm.name} already has a token there"
             t.remove!
           end
         end
@@ -338,8 +357,7 @@ module Engine
           @log << "#{ndm.name} receives the trains: #{trains_transfered}"
         end
 
-        corporations.delete(major)
-        @round.entities.delete(major)
+        major.close!
       end
 
       def buy_first_5_train(player)
@@ -405,9 +423,13 @@ module Engine
       end
 
       def tile_lays(entity)
-        return super if entity.minor?
+        return [{ lay: true, upgrade: false }] if entity.minor?
 
-        [{ lay: true, upgrade: true }, { lay: :not_if_upgraded, upgrade: false }]
+        lays = [{ lay: true, upgrade: true }, { lay: :not_if_upgraded, upgrade: false }]
+        if @optional_rules&.include?(:triple_yellow_first_or) && @recently_floated&.include?(entity)
+          lays << { lay: :not_if_upgraded, upgrade: false }
+        end
+        lays
       end
 
       private
@@ -418,7 +440,7 @@ module Engine
 
       def handle_mail(entity)
         hex = hex_by_id(entity.coordinates)
-        income = hex.tile.city_towns.first.route_revenue(@phase, entity.trains.first)
+        income = hex.tile.city_towns.first.route_base_revenue(@phase, entity.trains.first)
         @bank.spend(income, entity)
         @log << "#{entity.name} receives #{format_currency(income)} in mail"
       end
@@ -454,6 +476,7 @@ module Engine
         trains.delete(train)
 
         @minors.delete(minor)
+        minor.close!
       end
 
       def mergable_corporations
@@ -485,13 +508,6 @@ module Engine
         merge_major(candidate) if @mergable_candidates.one? && !candidate.floated?
       end
 
-      # Remove share from merged major by moving them to the neutral
-      def remove_share(major, share)
-        share.owner.shares_by_corporation[major].delete(share)
-        @neutral.shares_by_corporation[major] << share
-        share.owner = @neutral
-      end
-
       def replace_token(major, major_token, exchange_tokens)
         city = major_token.city
         @log << "#{major.name}'s token in #{city.hex.name} is replaced with an #{ndm.name} token"
@@ -499,6 +515,15 @@ module Engine
         major_token.remove!
         city.place_token(ndm, ndm_replacement, check_tokenable: false)
         exchange_tokens.delete(ndm_replacement)
+      end
+
+      def change_4t_to_hardrust
+        @depot.trains
+          .select { |t| t.name == '4' }
+          .each do |t|
+            t.rusts_on = t.obsolete_on
+            t.obsolete_on = nil
+          end
       end
     end
   end

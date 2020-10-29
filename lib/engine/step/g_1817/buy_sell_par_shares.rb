@@ -50,17 +50,30 @@ module Engine
         end
 
         def redeemable_shares(entity)
+          return [] if @corporate_action && entity != @corporate_action.entity
+
           # Done via Buy Shares
           @game.redeemable_shares(entity)
         end
 
+        def can_buy?(entity, bundle)
+          return unless bundle
+          return unless bundle.buyable
+
+          if entity.corporation?
+            entity.cash >= bundle.price && redeemable_shares(entity).include?(bundle)
+          else
+            super
+          end
+        end
+
         def corporate_actions(entity)
+          return [] if @corporation_action && @corporation_action.entity != entity
+
           actions = []
           if @current_actions.none?
             actions << 'take_loan' if @game.can_take_loan?(entity) && !@corporate_action.is_a?(Action::BuyShares)
-            if @game.redeemable_shares(entity).any? && !@corporate_action.is_a?(Action::TakeLoan)
-              actions << 'buy_shares'
-            end
+            actions << 'buy_shares' if @game.redeemable_shares(entity).any?
           end
           actions << 'buy_tokens' if can_buy_tokens?(entity)
           actions
@@ -98,6 +111,7 @@ module Engine
         def can_short?(entity, corporation)
           # check total shorts
           corporation.total_shares > 2 &&
+            @game.shorts(corporation).length < corporation.total_shares &&
             corporation.operated? &&
             entity.num_shares_of(corporation) <= 0 &&
             !corporation.share_price.acquisition? &&
@@ -115,9 +129,14 @@ module Engine
 
         def pass_description
           return 'Pass (Subsidiaries)' if available_subsidiaries.any?
-          return super unless @auctioning
 
-          'Pass (Bid)'
+          if @auctioning
+            'Pass (Bid)'
+          elsif @game.corporations.any? { |corp| corp.owner == current_entity && @round.tokens_needed?(corp) }
+            'Pass (May liquidate corporation)'
+          else
+            super
+          end
         end
 
         def log_pass(entity)
@@ -184,7 +203,7 @@ module Engine
 
             super
 
-            @game.unshort(entity, bundle) if unshort
+            @game.unshort(entity, bundle.shares[0]) if unshort
           else
             buy_shares(entity, bundle)
             @corporate_action = action
@@ -224,6 +243,9 @@ module Engine
         end
 
         def process_take_loan(action)
+          if @corporate_action && action.entity != @corporate_action.entity
+            @game.game_error('Cannot act as multiple corporations')
+          end
           @corporate_action = action
           @game.take_loan(action.entity, action.loan)
         end

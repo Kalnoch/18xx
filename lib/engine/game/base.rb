@@ -33,7 +33,8 @@ module Engine
       attr_reader :actions, :bank, :cert_limit, :cities, :companies, :corporations,
                   :depot, :finished, :graph, :hexes, :id, :loading, :loans, :log, :minors,
                   :phase, :players, :operating_rounds, :round, :share_pool, :stock_market,
-                  :tiles, :turn, :total_loans, :undo_possible, :redo_possible, :round_history, :all_tiles
+                  :tiles, :turn, :total_loans, :undo_possible, :redo_possible, :round_history, :all_tiles,
+                  :optional_rules
 
       DEV_STAGES = %i[production beta alpha prealpha].freeze
       DEV_STAGE = :prealpha
@@ -60,6 +61,8 @@ module Engine
       #  one_more_full_or_set - finish the current OR set, then
       #                         end after the next complete OR set
       GAME_END_CHECK = { bankrupt: :immediate, bank: :full_or }.freeze
+
+      OPTIONAL_RULES = [].freeze
 
       BANKRUPTCY_ALLOWED = true
 
@@ -119,6 +122,10 @@ module Engine
       # none, one, each
       POOL_SHARE_DROP = :none
 
+      # :after_last_to_act -- player after the last to act goes first. Order remains the same.
+      # :first_to_pass -- players ordered by when they first started passing.
+      NEXT_SR_PLAYER_ORDER = :after_last_to_act
+
       # do tile reservations completely block other companies?
       TILE_RESERVATION_BLOCKS_OTHERS = false
 
@@ -161,12 +168,23 @@ module Engine
       STATUS_TEXT = { 'can_buy_companies' =>
                       ['Can Buy Companies', 'All corporations can buy companies from players'] }.freeze
 
+      MARKET_TEXT = { par: 'Par value',
+                      no_cert_limit: 'Corporation shares do not count towards cert limit',
+                      unlimited: 'Corporation shares can be held above 60%',
+                      multiple_buy: 'Can buy more than one share in the corporation per turn',
+                      close: 'Corporation closes',
+                      endgame: 'End game trigger',
+                      liquidation: 'Liquidation',
+                      acquisition: 'Acquisition',
+                      repar: 'Par value after bankruptcy',
+                      ignore_one_sale: 'Ignore first share sold when moving price' }.freeze
+
       # Add elements (paragraphs of text) here to display it on Info page.
       TIMELINE = [].freeze
 
       IPO_NAME = 'IPO'
       IPO_RESERVED_NAME = 'IPO Reserved'
-
+      MARKET_SHARE_LIMIT = 50 # percent
       ALL_COMPANIES_ASSIGNABLE = false
 
       CACHABLE = [
@@ -189,6 +207,27 @@ module Engine
       RAND_M = 2**31
 
       def setup; end
+
+      def init_optional_rules(optional_rules)
+        optional_rules = (optional_rules || []).map(&:to_sym)
+        self.class::OPTIONAL_RULES.each do |rule|
+          optional_rules.delete(rule[:sym]) if rule[:players] && !rule[:players].include?(@players.size)
+        end
+        optional_rules
+      end
+
+      def setup_optional_rules; end
+
+      def log_optional_rules
+        return if @optional_rules.empty?
+
+        @log << 'Optional rules used in this game:'
+        self.class::OPTIONAL_RULES.each do |o_r|
+          next unless @optional_rules.include?(o_r[:sym])
+
+          @log << " * #{o_r[:short_name]}: (#{o_r[:desc]})"
+        end
+      end
 
       def self.title
         name.split('::').last.slice(1..-1)
@@ -276,7 +315,7 @@ module Engine
         const_set(:LAYOUT, data['layout'].to_sym)
       end
 
-      def initialize(names, id: 0, actions: [], pin: nil, strict: false)
+      def initialize(names, id: 0, actions: [], pin: nil, strict: false, optional_rules: [])
         @id = id
         @turn = 1
         @final_turn = nil
@@ -287,6 +326,7 @@ module Engine
         @actions = []
         @names = names.freeze
         @players = @names.map { |name| Player.new(name) }
+        @optional_rules = init_optional_rules(optional_rules)
 
         @seed = @id.to_s.scan(/\d+/).first.to_i % RAND_M
 
@@ -297,13 +337,13 @@ module Engine
           @log << "#{self.class.title} is currently considered 'alpha',"\
             ' the rules implementation is likely to not be complete.'
           @log << 'As the implementation improves, games that are not compatible'\
-            ' with the latest version may be deleted without notice.'
+            ' with the latest version will be deleted without notice.'
           @log << 'We suggest that any alpha quality game is concluded within 7 days.'
         when :beta
           @log << "#{self.class.title} is currently considered 'beta',"\
             ' the rules implementation may allow illegal moves.'
           @log << 'As the implementation improves, games that are not compatible'\
-            ' with the latest version may be deleted after 7 days.'
+            ' with the latest version will be pinned but may be deleted after 7 days.'
           @log << 'Because of this we suggest not playing games that may take months to complete.'
         end
 
@@ -340,6 +380,8 @@ module Engine
 
         init_company_abilities
 
+        setup_optional_rules
+        log_optional_rules
         setup
 
         initialize_actions(actions)
@@ -379,7 +421,7 @@ module Engine
       end
 
       def current_entity
-        @round.active_step.current_entity
+        @round.active_step&.current_entity || actions[-1].entity
       end
 
       def active_players
@@ -449,6 +491,8 @@ module Engine
           return clone(@actions)
         end
 
+        @log << "• Action(#{action.type}) via Master Mode by #{action.user}:" if action.user
+
         @round.process_action(action)
 
         unless action.is_a?(Action::Message)
@@ -479,6 +523,12 @@ module Engine
         self
       end
 
+      def sorted_corporations
+        # Corporations sorted by some potential game rules
+        ipoed, others = corporations.partition(&:ipoed)
+        ipoed.sort + others
+      end
+
       def current_action_id
         @actions.size + 1
       end
@@ -490,7 +540,7 @@ module Engine
       end
 
       def clone(actions)
-        self.class.new(@names, id: @id, pin: @pin, actions: actions)
+        self.class.new(@names, id: @id, pin: @pin, actions: actions, optional_rules: @optional_rules)
       end
 
       def trains
@@ -889,14 +939,27 @@ module Engine
 
         # Find the highest tile that exists of this type in the tile list and duplicate it.
         # The highest one in the list should be the highest index anywhere.
-        tiles = @tiles.select { |t| t.name == tile.name }
-        new_tile = tiles.max { |a, b| a.id <=> b.id }.dup
+        tiles = @_tiles.values.select { |t| t.name == tile.name }
+        new_tile = tiles.max { |a, b| a.index <=> b.index }.dup
         @tiles << new_tile
 
         @_tiles[new_tile.id] = new_tile
         extra_cities = new_tile.cities
         @cities.concat(extra_cities)
         extra_cities.each { |c| @_cities[c.id] = c }
+      end
+
+      def after_par(corporation)
+        return unless corporation.capitalization == :incremental
+
+        all_companies_with_ability(:shares) do |company, ability|
+          next unless corporation.name == ability.shares.first.corporation.name
+
+          amount = ability.shares.sum { |share| corporation.par_price.price * share.num_shares }
+          @bank.spend(amount, corporation)
+          @log << "#{corporation.name} receives #{format_currency(amount)}
+                   from #{company.name}"
+        end
       end
 
       private
@@ -1259,11 +1322,20 @@ module Engine
         end
       end
 
-      def reorder_players
-        player = @players.reject(&:bankrupt)[@round.entity_index]
+      def next_sr_position(entity)
+        player_order = @round.current_entity&.player? ? @round.pass_order : @players
+        player_order.reject(&:bankrupt).index(entity)
+      end
 
-        @players.rotate!(@players.index(player))
-        @log << "#{player.name} has priority deal"
+      def reorder_players
+        case self.class::NEXT_SR_PLAYER_ORDER
+        when :after_last_to_act
+          player = @players.reject(&:bankrupt)[@round.entity_index]
+          @players.rotate!(@players.index(player))
+        when :first_to_pass
+          @players = @round.pass_order if @round.pass_order.any?
+        end
+        @log << "#{@players.first.name} has priority deal"
       end
 
       def new_auction_round
