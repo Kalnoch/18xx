@@ -19,14 +19,24 @@ module Engine
     "4": 16,
     "5": 13,
     "6": 11,
-    "7": 9
+    "7": 9,
+    "8": 8,
+    "9": 7,
+    "10": 6,
+    "11": 6,
+    "12": 5
   },
   "startingCash": {
     "3": 420,
     "4": 315,
     "5": 252,
     "6": 210,
-    "7": 180
+    "7": 180,
+    "8": 158,
+    "9": 140,
+    "10": 126,
+    "11": 115,
+    "12": 105
   },
   "capitalization": "incremental",
   "layout": "pointy",
@@ -98,26 +108,26 @@ module Engine
   "market": [
     [
       "0l",
-      "40a",
-      "40a",
-      "40a",
+      "0a",
+      "0a",
+      "0a",
       "40",
       "45",
-      "50",
+      "50p",
       "55s",
-      "60",
-      "65",
+      "60p",
+      "65p",
       "70s",
-      "80",
-      "90",
-      "100",
-      "110",
+      "80p",
+      "90p",
+      "100p",
+      "110p",
       "120s",
-      "135",
-      "150",
-      "165",
-      "180",
-      "200",
+      "135p",
+      "150p",
+      "165p",
+      "180p",
+      "200p",
       "220",
       "245",
       "270",
@@ -189,7 +199,8 @@ module Engine
             "G6",
             "H9"
           ],
-          "owner_type": "corporation"
+          "owner_type": "corporation",
+          "show_count": true
         }
       ]
     },
@@ -214,6 +225,7 @@ module Engine
             "H9"
           ],
           "count": 2,
+          "show_count": true,
           "owner_type": "corporation"
         }
       ]
@@ -236,7 +248,7 @@ module Engine
       "name" : "Minor Coal Mine",
       "value" : 30,
       "revenue" : 0,
-      "desc" : "Comes with one coal mine marker.  When placing a yellow tile in a mountain hex, can place token to avoid $15 terrain fee.  Marked yellow hexes cannot be upgraded.  Hexes pay $10 extra revenue and do not count as a stop.  May not start or end a route at a coal mine.",
+      "desc" : "Comes with one coal mine marker.  When placing a yellow tile in a mountain hex next to a revenue location, can place token to avoid $15 terrain fee.  Marked yellow hexes cannot be upgraded.  Hexes pay $10 extra revenue and do not count as a stop.  May not start or end a route at a coal mine.",
       "sym" : "MINC",
       "abilities": [
         {
@@ -261,7 +273,8 @@ module Engine
           "free": false,
           "when": "track",
           "owner_type": "corporation",
-          "count": 1
+          "count": 1,
+          "show_count": true
         }
       ]
     },
@@ -269,7 +282,7 @@ module Engine
       "name" : "Coal Mine",
       "value" : 60,
       "revenue" : 0,
-      "desc" : "Comes with two coal mine markers.  When placing a yellow tile in a mountain hex, can place token to avoid $15 terrain fee.  Marked yellow hexes cannot be upgraded.  Hexes pay $10 extra revenue and do not count as a stop.  May not start or end a route at a coal mine.",
+      "desc" : "Comes with two coal mine markers.  When placing a yellow tile in a mountain hex next to a revenue location, can place token to avoid $15 terrain fee.  Marked yellow hexes cannot be upgraded.  Hexes pay $10 extra revenue and do not count as a stop.  May not start or end a route at a coal mine.",
       "sym" : "CM",
       "abilities": [
         {
@@ -294,7 +307,8 @@ module Engine
           "free": false,
           "when": "track",
           "owner_type": "corporation",
-          "count": 2
+          "count": 2,
+          "show_count": true
         }
       ]
     },
@@ -302,7 +316,7 @@ module Engine
       "name" : "Major Coal Mine",
       "value" : 90,
       "revenue" : 0,
-      "desc" : "Comes with three coal mine markers.  When placing a yellow tile in a mountain hex, can place token to avoid $15 terrain fee.  Marked yellow hexes cannot be upgraded.  Hexes pay $10 extra revenue and do not count as a stop.  May not start or end a route at a coal mine.",
+      "desc" : "Comes with three coal mine markers.  When placing a yellow tile in a mountain hex next to a revenue location, can place token to avoid $15 terrain fee.  Marked yellow hexes cannot be upgraded.  Hexes pay $10 extra revenue and do not count as a stop.  May not start or end a route at a coal mine.",
       "sym" : "MAJC",
       "abilities": [
         {
@@ -327,7 +341,8 @@ module Engine
           "free": false,
           "when": "track",
           "owner_type": "corporation",
-          "count": 3
+          "count": 3,
+          "show_count": true
         }
       ]
     },
@@ -651,7 +666,7 @@ module Engine
       "distance": 2,
       "price": 100,
       "rusts_on": "4",
-      "num": 20
+      "num": 40
     },
     {
       "name": "2+",
@@ -696,7 +711,7 @@ module Engine
       "name": "8",
       "distance": 8,
       "price": 1100,
-      "num": 16,
+      "num": 40,
       "events": [
         {"type": "signal_end_game"}
       ]
@@ -942,6 +957,9 @@ module Engine
         "green",
         "brown",
         "gray"
+      ],
+      "status": [
+        "no_new_shorts"
       ],
       "operating_rounds": 2,
       "corporation_sizes": [10]

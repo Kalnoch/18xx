@@ -14,7 +14,7 @@ module Engine
       end
 
       def select_entities
-        @game.minors + @game.corporations.select(&:floated?).sort
+        @game.minors.select(&:floated?) + @game.corporations.select(&:floated?).sort
       end
 
       def setup
@@ -33,7 +33,8 @@ module Engine
         return if action.type == 'message'
 
         if active_step
-          return if @entities[@entity_index].owner&.player?
+          entity = @entities[@entity_index]
+          return if entity.owner&.player? || entity.receivership?
         end
 
         next_entity!
@@ -73,6 +74,10 @@ module Engine
         # to change order. Re-sort only them.
         index = @entity_index + 1
         @entities[index..-1] = @entities[index..-1].sort if index < @entities.size - 1
+
+        @entities.pop while @entities.last&.corporation? &&
+          @entities.last.share_price.liquidation? &&
+          @entities.size > index
       end
 
       def teleported?(entity)

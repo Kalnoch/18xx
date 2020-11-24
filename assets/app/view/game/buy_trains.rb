@@ -64,7 +64,9 @@ module View
       def render
         step = @game.round.active_step
         @corporation = step.current_entity
-        @ability = @selected_company&.abilities(:train_discount, 'train') if @selected_company&.owner == @corporation
+        if @selected_company&.owner == @corporation
+          @ability = @selected_company&.abilities(:train_discount, time: 'train')
+        end
 
         @depot = @game.depot
 
@@ -239,7 +241,7 @@ module View
 
       def price_range(train)
         step = @game.round.active_step
-        if step.face_value?(train.owner) || step.face_value?(@corporation)
+        if step.must_buy_at_face_value?(train, @corporation)
           {
             type: 'number',
             min: train.price,
@@ -248,11 +250,12 @@ module View
             size: 1,
           }
         else
+          min, max = step.spend_minmax(@corporation, train)
           {
             type: 'number',
-            min: 1,
-            max: @corporation.cash,
-            value: 1,
+            min: min,
+            max: max,
+            value: min,
             size: @corporation.cash.to_s.size,
           }
         end

@@ -2,12 +2,14 @@
 
 require_relative '../base'
 require_relative '../share_buying'
+require_relative 'share_buying_with_shorts'
 
 module Engine
   module Step
     module G1817
       class PostConversion < Base
         include ShareBuying
+        include ShareBuyingWithShorts
 
         def actions(entity)
           return [] if !entity.player? || !@round.converted
@@ -70,9 +72,11 @@ module Engine
 
         def active_entities
           return [] unless corporation
+          # Ensure players can't buy after taking loans
+          return [] unless corporation.share_price == @round.converted_price
 
           [@game.players.rotate(@game.players.index(corporation.owner))
-          .select { |p| p.active? && can_buy_any?(p) }.first].compact
+          .select { |p| p.active? && (can_buy_any?(p) || can_sell?(p, nil)) }.first].compact
         end
       end
     end

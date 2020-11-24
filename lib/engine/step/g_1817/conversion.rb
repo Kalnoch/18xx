@@ -43,6 +43,7 @@ module Engine
             end
 
           @round.converts << corporation
+          @round.converted_price = corporation.share_price
           @round.converted = corporation
         end
 
@@ -121,11 +122,20 @@ module Engine
           @round.goto_entity!(corporation) unless @round.entities.empty?
 
           @round.converted = corporation
+          @round.converted_price = corporation.share_price
           @round.converts << corporation
         end
 
         def log_pass(entity)
           super unless entity.share_price.liquidation?
+        end
+
+        def mergeable_type(corporation)
+          "Corporations that can merge with #{corporation.name}"
+        end
+
+        def show_other_players
+          false
         end
 
         def mergeable(corporation)
@@ -135,6 +145,7 @@ module Engine
             target.floated? &&
             !@round.converts.include?(target) &&
               target.share_price.normal_movement? &&
+              !target.share_price.acquisition? &&
               target != corporation &&
               target.total_shares != 10 &&
               target.total_shares == corporation.total_shares &&
@@ -159,6 +170,7 @@ module Engine
         def round_state
           {
             converted: nil,
+            converted_price: nil,
             tokens_needed: nil,
             converts: [],
           }

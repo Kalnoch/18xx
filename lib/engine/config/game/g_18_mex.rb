@@ -104,7 +104,7 @@ module Engine
       "471":1,
       "472":1,
       "473":1,
-      "474":1,
+      "474":2,
       "475":1,
       "476":1,
       "477":1,
@@ -144,7 +144,7 @@ module Engine
          "color":"brown",
          "code":"town=revenue:10;path=a:2,b:_0,a_lane:2.1;path=a:5,b:_0;path=a:2,b:4,a_lane:2.0;label=P"
       },
-      "619":1
+      "619":2
    },
    "market":[
       [
@@ -253,7 +253,7 @@ module Engine
          "name":"Kansas City, Mexico, & Orient Railroad",
          "value":40,
          "revenue":10,
-         "desc":"Owning corporation may place the non-upgradable Copper Canyon tile in F5 for $60 (instead of the normal $120) unless that hex is already built. The tile lay does not have to be connected to an existing station token of the owning corporation. The lay does not count toward the normal lay limit but must be done during tile lay.",
+         "desc":"Owning corporation may place the non-upgradable Copper Canyon tile in F5 for $60 (instead of the normal $120) unless that hex is already built. The tile lay does not have to be connected to an existing station token of the owning corporation. The lay does not count toward the normal lay limit but must be done during tile lay. Using this tile laying ability closes the private company.",
          "abilities": [
             {
               "type": "tile_lay",
@@ -280,11 +280,6 @@ module Engine
             {
               "type": "no_buy",
               "owner_type": "player"
-            },
-            {
-               "type": "close",
-               "when": "3½",
-               "owner_type": "player"
             }
          ]
       },
@@ -298,11 +293,6 @@ module Engine
             {
               "type": "no_buy",
               "owner_type": "player"
-            },
-            {
-               "type": "close",
-               "when": "3½",
-               "owner_type": "player"
             }
          ]
       },
@@ -316,11 +306,6 @@ module Engine
             {
               "type": "no_buy",
               "owner_type": "player"
-            },
-            {
-               "type": "close",
-               "when": "3½",
-               "owner_type": "player"
             }
          ]
       },
@@ -459,14 +444,20 @@ module Engine
       },
       {
          "float_percent":50,
-         "sym":"PAC",
-         "name":"Pacific Railroad",
-         "logo":"18_mex/PAC",
+         "sym":"FCP",
+         "name":"Ferrocarril del Pacífico (Pacific Railroad)",
+         "logo":"18_mex/FCP",
          "tokens":[
             0,
             40,
             60,
             80
+         ],
+         "abilities": [
+            {
+               "type": "base",
+               "description": "Cannot be merged into NdM"
+            }
          ],
          "coordinates":"B3",
          "color":"yellow",
@@ -480,6 +471,12 @@ module Engine
          "tokens":[
             0,
             40
+         ],
+         "abilities": [
+            {
+               "type": "base",
+               "description": "Cannot be merged into NdM"
+            }
          ],
          "coordinates":"I12",
          "color":"orange"
@@ -569,7 +566,10 @@ module Engine
          ],
          "price":180,
          "num":4,
-         "rusts_on":"6"
+         "rusts_on":"6",
+         "events":[
+            {"type": "companies_buyable"}
+         ]
       },
       {
          "name":"3'",

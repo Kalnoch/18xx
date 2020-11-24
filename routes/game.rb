@@ -11,7 +11,7 @@ class Api
 
         # '/api/game/<game_id>/'
         r.is do
-          game_data = game.to_h(include_actions: true, player: user&.name)
+          game_data = game.to_h(include_actions: true, player: user&.id)
 
           game_data
         end
@@ -32,20 +32,22 @@ class Api
             game.to_h
           end
 
-          not_authorized! unless users.any? { |u| u.id == user.id }
-
           r.is 'leave' do
             halt(400, 'Cannot leave because game has started') unless game.status == 'new'
+            halt(400, 'You are not in the game') unless users.any? { |u| u.id == user.id }
             game.remove_player(user)
             game.to_h
           end
 
           # POST '/api/game/<game_id>/user_settings'
           r.is 'user_settings' do
-            game.update_player_settings(user.name, r.params)
+            game.update_player_settings(user.id, r.params)
             game.save
             game.to_h
           end
+
+          not_authorized! unless users.any? { |u| u.id == user.id } || game.user_id == user.id
+
           # POST '/api/game/<game_id>/action'
           r.is 'action' do
             acting, action = nil
@@ -80,11 +82,12 @@ class Api
 
                 game.save
               else
+                players = users.map { |u| [u.id, u.name] }.to_h
                 engine = Engine::GAMES_BY_TITLE[game.title].new(
-                  users.map(&:name),
+                  players,
                   id: game.id,
                   actions: actions_h(game),
-                  optional_rules: game.settings['optional_rules_selected']&.map(&:to_sym),
+                  optional_rules: game.settings['optional_rules']&.map(&:to_sym),
                 )
 
                 action_id = r.params['id']
@@ -146,10 +149,11 @@ class Api
 
           # POST '/api/game/<game_id>/start
           r.is 'start' do
+            players = users.map { |u| [u.id, u.name] }.to_h
             engine = Engine::GAMES_BY_TITLE[game.title].new(
-              users.map(&:name),
+              players,
               id: game.id,
-              optional_rules: game.settings['optional_rules_selected']&.map(&:to_sym),
+              optional_rules: game.settings['optional_rules']&.map(&:to_sym),
             )
             unless game.players.size.between?(*Engine.player_range(engine.class))
               halt(400, 'Player count not supported')
@@ -186,7 +190,7 @@ class Api
             settings: {
               seed: Random.new_seed % 2**31,
               unlisted: r['unlisted'],
-              optional_rules_selected: r['optional_rules_selected'],
+              optional_rules: r['optional_rules'],
             },
             title: title,
             round: Engine::GAMES_BY_TITLE[title].new([]).round&.name,

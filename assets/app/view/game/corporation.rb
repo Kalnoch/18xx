@@ -58,7 +58,17 @@ module View
           ability.owner.corporation? && ability.description
         end
         children << render_abilities(abilities_to_display) if abilities_to_display.any?
-        children << render_loans if @corporation.loans.any?
+
+        extras = []
+        extras.concat(render_loans) if @corporation.loans.any?
+        if @corporation.corporation? && @corporation.floated? && @game.total_loans.positive?
+          extras << render_buying_power
+        end
+        extras << render_corporation_size if @game.show_corporation_size?
+        if extras.any?
+          props = { style: { borderCollapse: 'collapse' } }
+          children << h('table.center', props, [h(:tbody, extras)])
+        end
 
         if @corporation.owner
           props = {
@@ -146,7 +156,7 @@ module View
           elsif @corporation.cash.positive?
             h(:div, holdings_props, [render_to_float, render_cash])
           else
-            h(:div, holdings_props, "#{@corporation.percent_to_float}% to float")
+            h(:div, holdings_props, @game.float_str(@corporation))
           end
 
         h('div.corp__holdings', holdings_row_props, [
@@ -300,14 +310,6 @@ module View
           ]),
         ]
 
-        if @corporation.reserved_shares.any?
-          pool_rows <<
-            h('tr.ipo_reserved', [
-              h('td.left', @game.class::IPO_RESERVED_NAME),
-              h('td.right', shares_props, share_number_str(@corporation.num_ipo_reserved_shares)),
-            ])
-        end
-
         market_tr_props = {
           style: {
             borderBottom: player_rows.any? ? '1px solid currentColor' : '0',
@@ -315,7 +317,8 @@ module View
         }
 
         if player_rows.any?
-          if !@corporation.counts_for_limit && (color = StockMarket::COLOR_MAP[@corporation.share_price.color])
+          if @corporation.share_price&.highlight? &&
+            (color = StockMarket::COLOR_MAP[@game.class::STOCKMARKET_COLORS[@corporation.share_price.type]])
             market_tr_props[:style][:backgroundColor] = color
             market_tr_props[:style][:color] = contrast_on(color)
           end
@@ -393,21 +396,37 @@ module View
       end
 
       def render_loans
-        props = { style: { borderCollapse: 'collapse' } }
-        h('table.center', props, [
-          h(:thead, [
-            h(:tr, [
-              h(:th, 'Loans'),
-              h(:th, 'Interest Due'),
-            ]),
+        interest_props = { style: {} }
+        unless @game.can_pay_interest?(@corporation)
+          color = StockMarket::COLOR_MAP[:yellow]
+          interest_props[:style][:backgroundColor] = color
+          interest_props[:style][:color] = contrast_on(color)
+        end
+
+        [
+          h('tr.ipo', [
+            h('td.right', 'Loans'),
+            h('td.padded_number', "#{@corporation.loans.size}/"\
+            "#{@game.maximum_loans(@corporation)}"),
           ]),
-          h(:tbody, [
-            h('tr.ipo', [
-              h('td.right', "#{@corporation.loans.size}/"\
-              "#{@game.maximum_loans(@corporation)}"),
-              h('td.padded_number', @game.format_currency(@game.interest_owed(@corporation)).to_s),
-            ]),
+          h('tr.ipo', interest_props, [
+            h('td.right', 'Interest Due'),
+            h('td.padded_number', @game.format_currency(@game.interest_owed(@corporation)).to_s),
           ]),
+        ]
+      end
+
+      def render_buying_power
+        h('tr.ipo', [
+          h('td.right', 'Buying Power'),
+          h('td.padded_number', @game.format_currency(@game.buying_power(@corporation)).to_s),
+        ])
+      end
+
+      def render_corporation_size
+        h('tr.ipo', [
+          h('td.right', 'Corporation Size'),
+          h('td.padded_number', @corporation.total_shares),
         ])
       end
 

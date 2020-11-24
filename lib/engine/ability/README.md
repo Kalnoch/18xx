@@ -22,6 +22,9 @@ These attributes may be set for all ability types
 - `count_per_or`: The number of times the ability may be used in each OR; the
   property `count_this_or` is reset to 0 at the start of each OR and increments
   each time the ability is used
+- `show_count`: If the count used/count started should be shown to the user; this
+  this assumes that the ability can be partially used and also that the entity only has
+  one ability with show_count = true
 
 ## additional_token
 
@@ -68,11 +71,17 @@ Describe when the company closes, using the `when` attribute.
 - `corporation'`: If `when` is set to `"train"`, this value is the name
 of the corporation whose train purchase closes this company.
 
+## description
+
+Provide a description for an ability that is implemented outside of the ability framework.
+
+- `description`: Description of the ability.
+
 ## exchange
 
 Exchange this company for a share of a corporation.
 
-- `corporation`: The corporation whose share may be exchanged.
+- `corporation`: The corporation whose share may be exchanged. Use `"any"` to allow for all corporations.
 - `from`: Where the share may be take from, either `"ipo"`,
   `"market"`, or an array containing both.
 
@@ -147,6 +156,7 @@ normal tile lay actions.
 
 - `hexes`: Array of hex coordinates where tiles may be laid.
 - `tiles`: Array of tile numbers which may be laid.
+- `cost`: Cost to use the ability.
 - `free`: If true, the tiles are laid with 0 cost. Default false.
 - `discount`: Discount the cost of laying the tile by the given
   amount. Default 0.

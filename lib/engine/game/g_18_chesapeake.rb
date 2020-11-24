@@ -23,10 +23,11 @@ module Engine
       GAME_LOCATION = nil
       GAME_RULES_URL = 'https://www.dropbox.com/s/x0dsehrxqr1tl6w/18Chesapeake_Rules.pdf'
       GAME_DESIGNER = 'Scott Petersen'
-      GAME_PUBLISHER = Publisher::INFO[:all_aboard_games]
+      GAME_PUBLISHER = :all_aboard_games
       GAME_INFO_URL = 'https://github.com/tobymao/18xx/wiki/18Chesapeake'
 
       MUST_BID_INCREMENT_MULTIPLE = true
+      ONLY_HIGHEST_BID_COMMITTED = true
       SELL_BUY_ORDER = :sell_buy
 
       def init_share_pool

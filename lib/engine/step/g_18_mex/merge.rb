@@ -23,10 +23,22 @@ module Engine
           @game.ndm
         end
 
+        def mergeable_type(corporation)
+          "Corporations that can merge with #{corporation.name}"
+        end
+
         def mergeable(_corporation)
           return [] unless merge_ongoing?
 
-          [@game.mergable_candidates.first]
+          [@game.mergeable_candidates.first]
+        end
+
+        def override_entities
+          @game.mergeable_candidates
+        end
+
+        def show_other_players
+          true
         end
 
         def active?
@@ -50,13 +62,13 @@ module Engine
         end
 
         def process_pass(_action)
-          @game.decline_merge(@game.mergable_candidates.first)
+          @game.decline_merge(@game.mergeable_candidates.first)
         end
 
         private
 
         def merge_ongoing?
-          @game.mergable_candidates.any?
+          @game.mergeable_candidates.any?
         end
       end
     end

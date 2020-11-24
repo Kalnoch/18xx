@@ -17,15 +17,19 @@ module Engine
           'Acquisition Round'
         end
 
+        def context_entities
+          @offering
+        end
+
+        def active_context_entity
+          @offering.first
+        end
+
         def select_entities
           # Things that are offered up for acquisition, sale etc
           @offering = @game
                         .corporations
-                        .select do |corp|
-                          corp.floated? &&
-                            (!corp.share_price.acquisition? ||
-                             @game.stock_prices_start_merger[corp].acquisition?)
-                        end
+                        .select(&:floated?)
                         .sort.reverse
           @game.players.select { |p| p.presidencies.any? }
         end

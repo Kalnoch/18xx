@@ -29,7 +29,7 @@ module Engine
       init_abilities(opts[:abilities])
     end
 
-    def abilities(_type); end
+    def abilities(_type = nil, **opts); end
 
     def companies
       @companies ||= []
@@ -61,6 +61,24 @@ module Engine
 
     def closed?
       @closed
+    end
+
+    def share_price; end
+
+    def par_price; end
+
+    def num_shares_of(_corporation, _ceil = true)
+      0
+    end
+
+    def share_percent
+      100
+    end
+
+    def president?(player)
+      return false unless player
+
+      owner == player
     end
 
     def close!

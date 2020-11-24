@@ -34,7 +34,7 @@ module Engine
       GAME_IMPLEMENTER = 'Chris Rericha based on 1828 by J C Lawrence'
       GAME_INFO_URL = 'https://github.com/tobymao/18xx/wiki/1828.Games'
 
-      MULTIPLE_BUY_COLORS = %i[orange].freeze
+      MULTIPLE_BUY_TYPES = %i[unlimited].freeze
 
       MUST_BID_INCREMENT_MULTIPLE = true
       MIN_BID_INCREMENT = 5
@@ -58,6 +58,11 @@ module Engine
                                   'All non-parred corporations are removed. Blocking tokens placed in home stations']
       ).freeze
 
+      VA_COALFIELDS_HEX = 'K11'
+      VA_TUNNEL_HEX = 'K13'
+      COAL_MARKER_ICON = 'coal'
+      COAL_MARKER_COST = 120
+
       def self.title
         '1828.Games'
       end
@@ -72,6 +77,8 @@ module Engine
       def stock_round
         Round::G1828::Stock.new(self, [
           Step::DiscardTrain,
+          Step::Exchange,
+          Step::SpecialTrack,
           Step::G1828::BuySellParShares,
         ])
       end
@@ -79,31 +86,53 @@ module Engine
       def operating_round(round_num)
         Round::Operating.new(self, [
           Step::Bankrupt,
+          Step::Exchange,
           Step::DiscardTrain,
-          Step::SpecialTrack,
-          Step::BuyCompany,
-          Step::Track,
-          Step::Token,
-          Step::Route,
-          Step::Dividend,
+          Step::G1828::SpecialTrack,
+          Step::G1828::BuyCompany,
+          Step::G1828::BuySpecial,
+          Step::G1828::Track,
+          Step::G1828::Token,
+          Step::G1828::Route,
+          Step::G1828::Dividend,
           Step::BuyTrain,
           [Step::BuyCompany, blocks: true],
         ], round_num: round_num)
       end
 
       def setup
+        setup_minors
+
+        @log << "-- Setting game up for #{@players.size} players --"
         remove_extra_private_companies
         remove_extra_trains
+
+        @coal_marker_ability =
+          Engine::Ability::Description.new(type: 'description', description: 'Coal Marker')
+        block_va_coalfields
       end
 
       def init_stock_market
-        sm = Engine::G1828::StockMarket.new(self.class::MARKET, self.class::CERT_LIMIT_COLORS,
-                                            multiple_buy_colors: self.class::MULTIPLE_BUY_COLORS)
+        sm = Engine::G1828::StockMarket.new(self.class::MARKET, self.class::CERT_LIMIT_TYPES,
+                                            multiple_buy_types: self.class::MULTIPLE_BUY_TYPES)
         sm.enable_par_price(67)
         sm.enable_par_price(71)
         sm.enable_par_price(79)
 
         sm
+      end
+
+      EXTRA_TILE_LAYS = [{ lay: true, upgrade: true }, { lay: :not_if_upgraded, upgrade: false, cost: 40 }].freeze
+      EXTRA_TILE_LAY_CORPS = %w[B&M NYH].freeze
+
+      def tile_lays(entity)
+        return self.class::EXTRA_TILE_LAYS if EXTRA_TILE_LAY_CORPS.any?(entity.id)
+
+        super
+      end
+
+      def corporation_opts
+        { can_hold_above_max: true }
       end
 
       def init_round_finished
@@ -126,6 +155,12 @@ module Engine
         stock_market.enable_par_price(120)
       end
 
+      def event_close_companies!
+        super
+
+        @minors.dup.each { |minor| remove_minor!(minor) }
+      end
+
       def event_remove_corporations!
         @log << "-- Event: #{EVENTS_TEXT['remove_corporations'][1]}. --"
         @corporations.reject(&:ipoed).each do |corporation|
@@ -140,7 +175,92 @@ module Engine
         @phase.current[:name] == 'Purple'
       end
 
+      def remove_minor!(minor)
+        @round.force_next_entity! if @round.current_entity == minor
+        minor.spend(minor.cash, @bank) if minor.cash.positive?
+        @minors.delete(minor)
+      end
+
+      def upgrades_to?(from, to, special = false)
+        # Virginia tunnel can only be upgraded to #4 tile
+        return false if from.hex.id == VA_TUNNEL_HEX && to.name != '4'
+
+        super
+      end
+
+      def coal_marker_available?
+        hex_by_id(VA_COALFIELDS_HEX).tile.icons.any? { |icon| icon.name == COAL_MARKER_ICON }
+      end
+
+      def coal_marker?(entity)
+        return false unless entity.corporation?
+
+        entity.all_abilities.any? { |ability| ability.description == @coal_marker_ability.description }
+      end
+
+      def connected_to_coalfields?(entity)
+        graph.connected_hexes(entity).include?(hex_by_id(VA_COALFIELDS_HEX))
+      end
+
+      def can_buy_coal_marker?(entity)
+        return false unless entity.corporation?
+
+        connected_to_coalfields?(entity) &&
+          coal_marker_available? &&
+          !coal_marker?(entity) &&
+          buying_power(entity) >= COAL_MARKER_COST
+      end
+
+      def buy_coal_marker(entity)
+        return unless can_buy_coal_marker?(entity)
+
+        entity.spend(COAL_MARKER_COST, @bank)
+        entity.add_ability(@coal_marker_ability.dup)
+        @log << "#{entity.name} buys a coal marker for $#{COAL_MARKER_COST}"
+
+        tile_icons = hex_by_id(VA_COALFIELDS_HEX).tile.icons
+        tile_icons.delete_at(tile_icons.find_index { |icon| icon.name == COAL_MARKER_ICON })
+
+        graph.clear
+      end
+
+      def acquire_va_tunnel_coal_marker(entity)
+        entity = entity.owner if entity.company?
+
+        @log << "#{entity.name} acquires a coal marker"
+        if coal_marker?(entity)
+          @log << "#{entity.name} already owns a coal marker, placing coal marker on Virginia Coalfields"
+          add_coal_marker_to_va_coalfields
+        else
+          entity.add_ability(@coal_marker_ability.dup)
+        end
+      end
+
+      def add_coal_marker_to_va_coalfields
+        hex_by_id(VA_COALFIELDS_HEX).tile.icons << Engine::Part::Icon.new('1828/coal', 'coal')
+      end
+
+      def block_va_coalfields
+        coalfields = hex_by_id(VA_COALFIELDS_HEX).tile.cities.first
+
+        coalfields.instance_variable_set(:@game, self)
+
+        def coalfields.blocks?(corporation)
+          !@game.coal_marker?(corporation)
+        end
+      end
+
       private
+
+      def setup_minors
+        @minors.each do |minor|
+          train = @depot.upcoming[0]
+          train.buyable = false
+          minor.buy_train(train, :free)
+          hex = hex_by_id(minor.coordinates)
+          hex.tile.cities[0].place_token(minor, minor.next_token, free: true)
+        end
+      end
 
       def remove_extra_private_companies
         to_remove = companies.find_all { |company| company.value == 250 }
@@ -148,7 +268,7 @@ module Engine
                              .take(7 - @players.size)
         to_remove.each do |company|
           company.close!
-          @round.active_step.companies.delete(company)
+          @round.steps.find { |step| step.is_a?(Step::G1828::WaterfallAuction) }.companies.delete(company)
           @log << "Removing #{company.name}"
         end
       end

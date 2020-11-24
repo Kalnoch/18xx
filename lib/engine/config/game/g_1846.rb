@@ -20,9 +20,21 @@ module Engine
     "5": 9000
   },
   "certLimit": {
-    "3": 14,
-    "4": 12,
-    "5": 11
+    "3": {
+      "5" : 14,
+      "4" : 11
+    },
+    "4": {
+      "6" : 12,
+      "5" : 10,
+      "4" : 8
+    },
+    "5": {
+      "7" : 11,
+      "6" : 10,
+      "5" : 8,
+      "4" : 6
+    }
   },
   "startingCash": {
     "2": 600,
@@ -177,6 +189,7 @@ module Engine
       "abilities": [
         {
           "type": "token",
+          "when": "owning_corp_or_turn",
           "owner_type":"corporation",
           "hexes": [
             "D6"
@@ -233,6 +246,7 @@ module Engine
       "abilities": [
         {
           "type": "assign_hexes",
+          "when": "owning_corp_or_turn",
           "hexes": [
             "I1",
             "D6"
@@ -274,6 +288,7 @@ module Engine
         },
         {
           "type": "assign_hexes",
+          "when": "owning_corp_or_turn",
           "hexes": [
             "B8",
             "C5",
@@ -301,6 +316,7 @@ module Engine
       "abilities": [
         {
            "type":"tile_lay",
+           "when": "owning_corp_or_turn",
            "owner_type":"corporation",
            "free":true,
            "hexes":[
@@ -316,7 +332,6 @@ module Engine
               "296"
             ],
            "special": false,
-           "when":"track",
            "count": 1
         }
       ]
@@ -338,6 +353,7 @@ module Engine
         },
         {
            "type":"tile_lay",
+           "when": "owning_corp_or_turn",
            "owner_type":"corporation",
            "free":true,
            "hexes":[
@@ -349,7 +365,6 @@ module Engine
               "8",
               "9"
             ],
-           "when":"track",
            "blocks":false,
            "count": 2
         }
@@ -372,6 +387,7 @@ module Engine
         },
         {
            "type":"tile_lay",
+           "when": "owning_corp_or_turn",
            "owner_type":"corporation",
            "free":true,
            "hexes":[
@@ -383,7 +399,6 @@ module Engine
               "8",
               "9"
             ],
-           "when":"track",
            "blocks": false,
            "count": 2
         }

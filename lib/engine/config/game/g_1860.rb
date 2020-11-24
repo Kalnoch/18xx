@@ -197,7 +197,7 @@ module Engine
     "763": {
       "count": 1,
       "color": "green",
-      "code": "city=revenue:50,loc:center;city=revenue:30;path=a:0,b:_0;path=a:2,b:_0;path=a:1,b:_0;path=a:3,b:_0;path=a:5,b:_1;label=N"
+      "code": "city=revenue:50,loc:2.5;city=revenue:30,loc:5.5;path=a:1,b:_0;path=a:2,b:_0;path=a:3,b:_0;path=a:4,b:_0;path=a:0,b:_1;label=N"
     },
     "764": {
       "count": 2,
@@ -247,7 +247,7 @@ module Engine
     "773": {
       "count": 1,
       "color": "brown",
-      "code": "city=revenue:60,slots:2,loc:1.5;city=revenue:20,loc:4.5;path=a:0,b:_0;path=a:2,b:_0;path=a:1,b:_0;path=a:3,b:_0;path=a:5,b:_1;path=a:4,b:_1;path=a:_0,b:_1;label=N"
+      "code": "city=revenue:60,slots:2,loc:2.5;city=revenue:20,loc:5.5;path=a:1,b:_0;path=a:2,b:_0;path=a:3,b:_0;path=a:4,b:_0;path=a:0,b:_1;path=a:5,b:_1;path=a:_0,b:_1;label=N"
     },
     "774": {
       "count": 1,
@@ -394,7 +394,7 @@ module Engine
       "name": "Brading Harbour Company",
       "value": 30,
       "revenue": 5,
-      "desc": "Can be exchanged for a share in the BHI&R pubilc company.",
+      "desc": "Can be exchanged for a share in the BHI&R pubilc company",
       "sym": "BHC",
       "abilities": [
         {
@@ -464,6 +464,7 @@ module Engine
       "name": "Cowes & Newport",
       "logo": "1860/CN",
       "float_percent": 50,
+      "max_ownership_percent": 100,
       "tokens": [
         0,
         40,
@@ -479,6 +480,7 @@ module Engine
       "name": "Isle of Wight",
       "logo": "1860/IOW",
       "float_percent": 50,
+      "max_ownership_percent": 100,
       "tokens": [
         0,
         40,
@@ -493,6 +495,7 @@ module Engine
       "name": "Isle of Wight, Newport Juntion",
       "logo": "1860/IWNJ",
       "float_percent": 50,
+      "max_ownership_percent": 100,
       "tokens": [
         0,
         40,
@@ -506,6 +509,7 @@ module Engine
       "name": "Freshwater, Yarmouth & Newport",
       "logo": "1860/FYN",
       "float_percent": 50,
+      "max_ownership_percent": 100,
       "tokens": [
         0,
         40,
@@ -519,6 +523,7 @@ module Engine
       "name": "Newport, Godshill & St. Lawrence",
       "logo": "1860/NGStL",
       "float_percent": 50,
+      "max_ownership_percent": 100,
       "tokens": [
         0,
         40
@@ -532,6 +537,7 @@ module Engine
       "name": "Brading Harbour Improvement & Railway",
       "logo": "1860/BHIR",
       "float_percent": 50,
+      "max_ownership_percent": 100,
       "tokens": [
         0,
         40
@@ -544,6 +550,7 @@ module Engine
       "name": "Shanklin & Chale",
       "logo": "1860/SC",
       "float_percent": 50,
+      "max_ownership_percent": 100,
       "tokens": [
         0,
         40
@@ -556,6 +563,7 @@ module Engine
       "name": "Ventor, Yarmouth & South Coast",
       "logo": "1860/VYSC",
       "float_percent": 50,
+      "max_ownership_percent": 100,
       "tokens": [
         0,
         40
@@ -568,53 +576,144 @@ module Engine
   "trains": [
     {
       "name": "2+1",
-      "distance": 2,
+      "distance": [
+        {
+          "nodes": ["city", "offboard"],
+          "pay": 2,
+          "visit": 2
+        },
+        {
+          "nodes": ["town", "halt"],
+          "pay": 1,
+          "visit": 99
+        }
+      ],
       "price": 250,
       "rusts_on": "4+2",
       "num": 5
     },
     {
       "name": "3+2",
-      "distance": 3,
+      "distance": [
+        {
+          "nodes": ["city", "offboard"],
+          "pay": 3,
+          "visit": 3
+        },
+        {
+          "nodes": ["town", "halt"],
+          "pay": 2,
+          "visit": 99
+        }
+      ],
       "price": 300,
       "rusts_on": "6+3",
       "num": 4
     },
     {
       "name": "4+2",
-      "distance": 4,
+      "distance": [
+        {
+          "nodes": ["city", "offboard"],
+          "pay": 4,
+          "visit": 4
+        },
+        {
+          "nodes": ["town", "halt"],
+          "pay": 2,
+          "visit": 99
+        }
+      ],
       "price": 350,
       "rusts_on": "7+4",
       "num": 3
     },
     {
       "name": "5+3",
-      "distance": 5,
+      "distance": [
+        {
+          "nodes": ["city", "offboard"],
+          "pay": 5,
+          "visit": 5
+        },
+        {
+          "nodes": ["town", "halt"],
+          "pay": 3,
+          "visit": 99
+        }
+      ],
       "price": 400,
       "rusts_on": "8+4",
       "num": 2
     },
     {
       "name": "6+3",
-      "distance": 6,
+      "distance": [
+        {
+          "nodes": ["city", "offboard"],
+          "pay": 6,
+          "visit": 6
+        },
+        {
+          "nodes": ["town", "halt"],
+          "pay": 3,
+          "visit": 99
+        }
+      ],
       "price": 500,
-      "num": 2
+      "num": 2,
+      "events": [
+        {"type": "fishbourne_to_bank"}
+      ]
     },
     {
       "name": "7+4",
-      "distance": 7,
+      "distance": [
+        {
+          "nodes": ["city", "offboard"],
+          "pay": 7,
+          "visit": 7
+        },
+        {
+          "nodes": ["town", "halt"],
+          "pay": 4,
+          "visit": 99
+        }
+      ],
       "price": 600,
       "num": 1
     },
     {
       "name": "8+4",
-      "distance": 8,
+      "distance": [
+        {
+          "nodes": ["city", "offboard"],
+          "pay": 8,
+          "visit": 8
+        },
+        {
+          "nodes": ["town", "halt"],
+          "pay": 4,
+          "visit": 99
+        }
+      ],
       "price": 700,
       "num": 1
     },
     {
       "name": "9+5",
-      "distance": 9,
+      "distance": [
+        {
+          "nodes": ["city", "offboard"],
+          "pay": 9,
+          "visit": 9
+        },
+        {
+          "nodes": ["town", "halt"],
+          "pay": 5,
+          "visit": 99
+        }
+      ],
       "price": 800,
       "num": 6
     }
@@ -721,68 +820,83 @@ module Engine
       "train_limit": 4,
       "tiles": [
         "yellow"
-      ]
+      ],
+      "operating_rounds": 1
     },
     {
       "name": "3",
+      "on": "3+2",
       "train_limit": 4,
       "tiles": [
         "yellow",
         "green"
-      ]
+      ],
+      "operating_rounds": 2
     },
     {
       "name": "4",
+      "on": "4+2",
       "train_limit": 3,
       "tiles": [
         "yellow",
         "green"
-      ]
+      ],
+      "operating_rounds": 2
     },
     {
       "name": "5",
+      "on": "5+3",
       "train_limit": 3,
       "tiles": [
         "yellow",
         "green",
         "brown"
-      ]
+      ],
+      "operating_rounds": 3
     },
     {
       "name": "6",
+      "on": "6+3",
       "train_limit": 2,
       "tiles": [
         "yellow",
         "green",
         "brown"
-      ]
+      ],
+      "operating_rounds": 3
     },
     {
       "name": "7",
+      "on": "7+4",
       "train_limit": 2,
       "tiles": [
         "yellow",
         "green",
         "brown"
-      ]
+      ],
+      "operating_rounds": 3
     },
     {
       "name": "8",
+      "on": "8+4",
       "train_limit": 2,
       "tiles": [
         "yellow",
         "green",
         "brown"
-      ]
+      ],
+      "operating_rounds": 3
     },
     {
       "name": "9",
+      "on": "9+5",
       "train_limit": 2,
       "tiles": [
         "yellow",
         "green",
         "brown"
-      ]
+      ],
+      "operating_rounds": 3
     }
   ]
 }

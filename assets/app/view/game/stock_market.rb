@@ -29,6 +29,7 @@ module View
       BORDER = 1
       WIDTH_TOTAL = 50                            # of entire box, including border
       TOKEN_SIZE = 25
+      TOKEN_SIZES = { small: 25, medium: 32, large: 40 }.freeze
 
       # 1D markets
       VERTICAL_TOKEN_PAD = 4                      # vertical space between tokens
@@ -69,8 +70,9 @@ module View
       end
 
       def cell_style(box_style, price)
-        style = box_style.merge(backgroundColor: price.color ? COLOR_MAP[price.color] : color_for(:bg2))
-        if price.color == :black
+        color = @game.class::STOCKMARKET_COLORS[price.type]
+        style = box_style.merge(backgroundColor: color ? COLOR_MAP[color] : color_for(:bg2))
+        if color == :black
           style[:color] = 'gainsboro'
           style[:borderColor] = color_for(:font)
         end
@@ -79,7 +81,7 @@ module View
 
       def grid_1d_price(price)
         if price.acquisition?
-          h(:div, { style: PRICE_STYLE_1D }, "(#{price.price})")
+          h(:div, { style: PRICE_STYLE_1D }, 'Acq.')
         elsif price.type == :safe_par
           h(:div, { style: PRICE_STYLE_1D.merge(textDecoration: 'underline') }, price.price)
         else
@@ -88,20 +90,24 @@ module View
       end
 
       def grid_1d
-        box_style = box_style_1d
-
-        max_num_corps = @game.stock_market.market.first.map { |p| p.corporations.size }.push(MIN_NUM_TOKENS).max
-        box_height = max_num_corps * (TOKEN_SIZE + VERTICAL_TOKEN_PAD) + VERTICAL_TOKEN_PAD + PRICE_HEIGHT + 2 * PAD
-        box_style[:height] = "#{box_height - 2 * PAD - 2 * BORDER}px"
+        token_height = @game.stock_market.market.first.map do |p|
+          p.corporations.sum { |c| TOKEN_SIZES[@game.corporation_size(c)] + VERTICAL_TOKEN_PAD }
+        end.push(MIN_NUM_TOKENS * (TOKEN_SIZE + VERTICAL_TOKEN_PAD)).max
+        box_height = token_height + VERTICAL_TOKEN_PAD + PRICE_HEIGHT + 2 * PAD
+        height = "#{box_height - 2 * PAD - 2 * BORDER}px"
 
         row = @game.stock_market.market.first.map do |price|
           tokens = price.corporations.map do |corporation|
             props = {
-              attrs: { src: corporation.logo, width: "#{TOKEN_SIZE}px" },
+              attrs: { src: corporation.logo, width: "#{TOKEN_SIZES[@game.corporation_size(corporation)]}px" },
               style: { marginTop: "#{VERTICAL_TOKEN_PAD}px" },
             }
             h(:img, props)
           end
+
+          box_style = box_style_1d
+          box_style[:height] = height
+          box_style = box_style.merge('margin-right': '10px') unless price.normal_movement?
 
           h(:div, { style: cell_style(box_style, price) }, [
             grid_1d_price(price),
@@ -129,7 +135,7 @@ module View
         @game.stock_market.market.first.each_with_index do |price, idx|
           tokens = price.corporations.map do |corporation|
             props = {
-              attrs: { src: corporation.logo, width: "#{TOKEN_SIZE}px" },
+              attrs: { src: corporation.logo, width: "#{TOKEN_SIZES[@game.corporation_size(corporation)]}px" },
               style: { marginTop: "#{VERTICAL_TOKEN_PAD}px" },
             }
             h(:img, props)
@@ -215,13 +221,21 @@ module View
                end
 
         children = []
-        children << h(Bank, game: @game) if @game.game_end_check_values.include?(:bank)
+
+        props = {
+          style: {
+            marginBottom: '1rem',
+          },
+        }
+
+        children << h(:div, props, [h(Bank, game: @game)])
         children.concat(grid)
 
         if @explain_colors
           type_text = @game.class::MARKET_TEXT
+          colors = @game.class::STOCKMARKET_COLORS
 
-          types_in_market = @game.stock_market.market.flatten.compact.map { |p| [p.type, p.color] }.to_h
+          types_in_market = @game.stock_market.market.flatten.compact.map { |p| [p.type, colors[p.type]] }.to_h
 
           type_text.each do |type, text|
             next unless types_in_market.include?(type)
