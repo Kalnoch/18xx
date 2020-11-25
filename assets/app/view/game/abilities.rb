@@ -10,7 +10,7 @@ module View
       needs :selected_company, default: nil, store: true
       needs :show_other_abilities, default: false, store: true
 
-      ABILITIES = %i[tile_lay teleport assign_hexes assign_corporation token exchange].freeze
+      ABILITIES = %i[tile_lay teleport assign_hexes assign_corporation token exchange float_minor].freeze
 
       def render
         companies = @game.companies.select { |company| !company.closed? && actions_for(company).any? }
@@ -73,6 +73,7 @@ module View
         actions = actions_for(@selected_company)
 
         views = []
+        views << h(FloatMinor) if actions.include?('float_minor')
         views << h(Exchange) if actions.include?('buy_shares')
         views << h(Map, game: @game) if !@game.round.is_a?(Engine::Round::Operating) &&
           (actions & %w[lay_tile place_token]).any?

@@ -203,6 +203,10 @@ module Engine
       ALL_COMPANIES_ASSIGNABLE = false
       OBSOLETE_TRAINS_COUNT_FOR_LIMIT = false
 
+      MINOR_BUY_TRAINS = false
+
+      MINOR_BUY_TRAINS = false
+
       CACHABLE = [
         %i[players player],
         %i[corporations corporation],

@@ -115,6 +115,10 @@ module View
 
         children << h(SellShares, player: current_entity, corporation: @corporation)
 
+        if step.current_actions.include?('convert')
+          children << h(:button, { on: { click: -> { process_action(Engine::Action::Convert.new(@corporation)) } } }, 'Float Major', )
+        end
+
         h(:div, children)
       end
 
