@@ -70,6 +70,12 @@ describe 'Assets' do
       {
         # games with config but not full implementation; just do a quick spot check
         '1817' => %w[Pittsburgh],
+        '1817NA' => %w[
+          Anchorage The Klondike Dawson City Hazelton Arctic Edmonton Winnipeg
+          Quebec Europe Seattle Denver Toronto New York Hawaii Los Angeles
+          Guadalajara Mexico City Miami New Orleans Belize South America
+          20 30 40 50 60 80 15 10 B Asia
+        ],
         '1846' => %w[Chicago],
 
         # games with full implementation; verify every string on the map
@@ -216,6 +222,7 @@ describe 'Assets' do
        ['Merge',
         'Decline',
         'Corporations that can merge with NdM']],
+      ['18_mex', 17_849, nil, 'endgame', '18MEX: Operating Round 4.2 (of 2) - Game Over - Bankruptcy'],
       ['1817', 15_528, 196, 'merge',
        ['Convert',
         'Merge',
@@ -232,6 +239,8 @@ describe 'Assets' do
       ['1817', 16_281, 1183, 'buy_sell_post_conversion',
        ['Merger Round 4.2 (of 2) - Buy/Sell Shares Post Conversion',
         'New York, Susquehanna and Western Railway']],
+      ['18_chesapeake', 1905, 166, 'blocking_special_track',
+       ['Lay Track for Columbia - Philadelphia Railroad']],
     ].freeze
 
     def render_game(jsonfile, no_actions, string)

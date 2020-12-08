@@ -26,6 +26,7 @@ require_relative '../share_pool'
 require_relative '../stock_market'
 require_relative '../tile'
 require_relative '../train'
+require_relative '../player_info'
 
 module Engine
   module Game
@@ -171,6 +172,7 @@ module Engine
       HOME_TOKEN_TIMING = :operate
 
       DISCARDED_TRAINS = :discard # discarded or removed?
+      DISCARDED_TRAIN_DISCOUNT = 0 # percent
       CLOSED_CORP_TRAINS = :removed # discarded or removed?
 
       MUST_BUY_TRAIN = :route # When must the company buy a train if it doesn't have one (route, never, always)
@@ -197,15 +199,14 @@ module Engine
                       repar: 'Par value after bankruptcy',
                       ignore_one_sale: 'Ignore first share sold when moving price' }.freeze
 
-      IPO_NAME = 'IPO'
-      IPO_RESERVED_NAME = 'IPO Reserved'
       MARKET_SHARE_LIMIT = 50 # percent
       ALL_COMPANIES_ASSIGNABLE = false
       OBSOLETE_TRAINS_COUNT_FOR_LIMIT = false
 
       MINOR_BUY_TRAINS = false
 
-      MINOR_BUY_TRAINS = false
+      CORPORATE_BUY_SHARE_SINGLE_CORP_ONLY = false
+      CORPORATE_BUY_SHARE_ALLOW_BUY_FROM_PRESIDENT = false
 
       CACHABLE = [
         %i[players player],
@@ -279,6 +280,7 @@ module Engine
           phase.transform_keys!(&:to_sym)
           phase[:tiles]&.map!(&:to_sym)
           phase[:events]&.transform_keys!(&:to_sym)
+          phase[:train_limit].transform_keys!(&:to_sym) if phase[:train_limit].is_a?(Hash)
           phase
         end
 
@@ -461,8 +463,8 @@ module Engine
         @round.active_step
       end
 
-      def active_player_names
-        active_players.map(&:name)
+      def active_players_id
+        active_players.map(&:id)
       end
 
       def self.filtered_actions(actions)
@@ -518,7 +520,9 @@ module Engine
           return clone(@actions)
         end
 
-        @log << "• Action(#{action.type}) via Master Mode by #{action.user}:" if action.user
+        if action.user
+          @log << "• Action(#{action.type}) via Master Mode by: #{player_by_id(action.user)&.name || 'Owner'}"
+        end
 
         preprocess_action(action)
 
@@ -539,8 +543,10 @@ module Engine
           @round.entities.each(&:unpass!)
 
           if end_now?(end_timing)
+
             end_game!
           else
+            store_player_info
             next_round!
 
             # Finalize round setup (for things that need round correctly set like place_home_token)
@@ -550,6 +556,12 @@ module Engine
         end
 
         self
+      end
+
+      def store_player_info
+        @players.each do |p|
+          p.history << PlayerInfo.new(@round.class.short_name, turn, @round.round_num, p)
+        end
       end
 
       def preprocess_action(_action); end
@@ -562,6 +574,10 @@ module Engine
         # Corporations sorted by some potential game rules
         ipoed, others = corporations.partition(&:ipoed)
         ipoed.sort + others
+      end
+
+      def operated_operators
+        (@corporations + @minors).select(&:operated?)
       end
 
       def current_action_id
@@ -580,6 +596,19 @@ module Engine
 
       def trains
         @depot.trains
+      end
+
+      def train_owner(train)
+        train.owner
+      end
+
+      def route_trains(entity)
+        entity.runnable_trains
+      end
+
+      # Before rusting, check if this train individual should rust.
+      def rust?(_train)
+        true
       end
 
       def shares
@@ -668,11 +697,11 @@ module Engine
       end
 
       def bundles_for_corporation(share_holder, corporation, shares: nil)
-        all_bundles_for_corporation(share_holder, corporation, shares)
+        all_bundles_for_corporation(share_holder, corporation, shares: shares)
       end
 
       # Needed for 18MEX
-      def all_bundles_for_corporation(share_holder, corporation, shares)
+      def all_bundles_for_corporation(share_holder, corporation, shares: nil)
         return [] unless corporation.ipoed
 
         shares = (shares || share_holder.shares_of(corporation)).sort_by(&:price)
@@ -745,6 +774,13 @@ module Engine
            (self.class::MUST_BUY_TRAIN == :route && @graph.route_info(entity)&.dig(:route_train_purchase)))
       end
 
+      def discard_discount(train, price)
+        return price unless self.class::DISCARDED_TRAIN_DISCOUNT
+        return price unless @depot.discarded.include?(train)
+
+        (price * (100.0 - self.class::DISCARDED_TRAIN_DISCOUNT.to_f) / 100.0).ceil.to_i
+      end
+
       def end_game!
         return if @finished
 
@@ -775,6 +811,10 @@ module Engine
 
       def compute_other_paths(routes, route)
         routes.reject { |r| r == route }.flat_map(&:paths)
+      end
+
+      def city_tokened_by?(city, entity)
+        city.tokened_by?(entity)
       end
 
       def check_overlap(routes)
@@ -984,8 +1024,11 @@ module Engine
         city.place_token(corporation, token)
       end
 
-      def tile_cost(tile, entity)
-        ability = entity.all_abilities.find { |a| a.type == :tile_discount }
+      def tile_cost(tile, hex, entity)
+        ability = entity.all_abilities.find do |a|
+          a.type == :tile_discount &&
+          (!a.hexes || a.hexes.include?(hex.name))
+        end
 
         tile.upgrades.sum do |upgrade|
           discount = ability && upgrade.terrains.uniq == [ability.terrain] ? ability.discount : 0
@@ -1137,7 +1180,7 @@ module Engine
           liquidity(player, emergency: true)
       end
 
-      def buying_power(entity)
+      def buying_power(entity, _full = false)
         entity.cash + (issuable_shares(entity).map(&:price).max || 0)
       end
 
@@ -1158,6 +1201,13 @@ module Engine
         extra_cities = new_tile.cities
         @cities.concat(extra_cities)
         extra_cities.each { |c| @_cities[c.id] = c }
+      end
+
+      def find_share_price(price)
+        @stock_market
+          .market[0]
+          .reverse
+          .find { |sp| sp.price <= price }
       end
 
       def after_par(corporation)
@@ -1186,6 +1236,14 @@ module Engine
       def flush_log!
         @queued_log.each { |l| @log << l }
         @queued_log = []
+      end
+
+      def ipo_name(_entity = nil)
+        'IPO'
+      end
+
+      def ipo_reserved_name(_entity = nil)
+        'IPO Reserved'
       end
 
       private
@@ -1637,6 +1695,17 @@ module Engine
         end
       end
 
+      def update_cache(type)
+        return unless CACHABLE.any? { |t, _n| t == type }
+
+        ivar = "@_#{type}"
+        instance_variable_set(ivar, send(type).map { |x| [x.id, x] }.to_h)
+      end
+
+      def bank_cash
+        @bank.cash
+      end
+
       def bankruptcy_limit_reached?
         @players.any?(&:bankrupt)
       end
@@ -1685,6 +1754,8 @@ module Engine
       def show_corporation_size?(_entity)
         false
       end
+
+      def status_str(_corporation); end
 
       # Override this, and add elements (paragraphs of text) here to display it on Info page.
       def timeline
