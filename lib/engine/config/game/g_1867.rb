@@ -124,37 +124,37 @@ module Engine
     "X1": {
       "count": 1,
       "color": "green",
-      "code": "city=revenue:50;city=revenue:50;city=revenue:50;path=a:0,b:_0;path=a:_0,b:3;path=a:1,b:_0;path=a:_0,b:4;path=a:2,b:_0;path=a:_0,b:5;label=M"
+      "code": "city=revenue:50;city=revenue:50;city=revenue:50;path=a:0,b:_0;path=a:_0,b:3;path=a:1,b:_1;path=a:_1,b:4;path=a:2,b:_2;path=a:_2,b:5;label=M"
     },
     "X2": {
       "count": 1,
       "color": "green",
-      "code": "city=revenue:50;city=revenue:50;city=revenue:50;path=a:0,b:_0;path=a:_0,b:3;path=a:2,b:_0;path=a:_0,b:4;path=a:1,b:_0;path=a:_0,b:5;label=M"
+      "code": "city=revenue:50;city=revenue:50;city=revenue:50;path=a:0,b:_0;path=a:_0,b:3;path=a:1,b:_1;path=a:_1,b:5;path=a:2,b:_2;path=a:_2,b:4;label=M"
     },
     "X3": {
       "count": 1,
       "color": "green",
-      "code": "city=revenue:50;city=revenue:50;city=revenue:50;path=a:0,b:_0;path=a:_0,b:1;path=a:3,b:_0;path=a:_0,b:5;path=a:2,b:_0;path=a:_0,b:4;label=M"
+      "code": "city=revenue:50;city=revenue:50;city=revenue:50;path=a:0,b:_0;path=a:_0,b:4;path=a:1,b:_1;path=a:_1,b:2;path=a:3,b:_2;path=a:_2,b:5;label=M"
     },
     "X4": {
       "count": 1,
       "color": "green",
-      "code": "city=revenue:50;city=revenue:50;city=revenue:50;path=a:1,b:_0;path=a:_0,b:2;path=a:0,b:_0;path=a:_0,b:3;path=a:4,b:_0;path=a:_0,b:5;label=M"
+      "code": "city=revenue:50;city=revenue:50;city=revenue:50;path=a:0,b:_0;path=a:_0,b:3;path=a:1,b:_1;path=a:_1,b:2;path=a:4,b:_2;path=a:_2,b:5;label=M"
     },
     "X5": {
       "count": 1,
       "color": "brown",
-      "code": "city=revenue:70,slots:2;city=revenue:70;path=a:5,b:_0;path=a:1,b:_0;path=a:2,b:_0;path=a:3,b:_0;path=a:4,b:_0;label=M"
+      "code": "city=revenue:70,slots:2;city=revenue:70;path=a:0,b:_0;path=a:1,b:_0;path=a:2,b:_0;path=a:4,b:_0;path=a:5,b:_0;path=a:3,b:_1;path=a:_0,b:_1;label=M"
     },
     "X6": {
       "count": 1,
       "color": "brown",
-      "code": "city=revenue:70,slots:2;city=revenue:70;path=a:0,b:_0;path=a:1,b:_0;path=a:2,b:_0;path=a:3,b:_0;path=a:4,b:_0;path=a:_0,b:5;label=M"
+      "code": "city=revenue:70,slots:2;city=revenue:70;path=a:0,b:_0;path=a:3,b:_0;path=a:4,b:_0;path=a:5,b:_0;path=a:1,b:_1;path=a:2,b:_1;label=M"
     },
     "X7": {
       "count": 1,
       "color": "brown",
-      "code": "city=revenue:70,slots:2;city=revenue:70;path=a:0,b:_0;path=a:1,b:_0;path=a:2,b:_0;path=a:_0,b:4;path=a:3,b:_0;path=a:5,b:_0;label=M"
+      "code": "city=revenue:70,slots:2;city=revenue:70;path=a:0,b:_0;path=a:1,b:_0;path=a:3,b:_0;path=a:5,b:_0;path=a:2,b:_1;path=a:4,b:_1;label=M"
     },
     "X8": {
       "count": 1,
@@ -167,21 +167,21 @@ module Engine
       "35",
       "40",
       "45",
-      "50p",
-      "55p",
-      "60p",
-      "65p",
+      "50x",
+      "55x",
+      "60x",
+      "65x",
       "70p",
       "80p",
       "90p",
-      "100y",
-      "110y",
-      "120y",
-      "135y",
-      "150y",
-      "165y",
-      "180y",
-      "200y",
+      "100p",
+      "110p",
+      "120p",
+      "135p",
+      "150z",
+      "165z",
+      "180z",
+      "200z",
       "220",
       "245",
       "270",
@@ -236,72 +236,85 @@ module Engine
       "sym": "CNR",
       "name": "Canadian Northern Railway",
       "logo": "1867/CNR",
+      "float_percent": 20,
       "tokens": [
         0,
         0,
         0
       ],
+      "type": "major",
       "color": "green"
     },
     {
       "sym": "CPR",
       "name": "Canadian Pacific Railway",
       "logo": "1867/CPR",
+      "float_percent": 20,
       "tokens": [
         0,
         0,
         0
       ],
+      "type": "major",
       "color": "red"
     },
     {
       "sym": "C&O",
       "name": "Chesapeake and Ohio Railway",
       "logo": "1867/CO",
+      "float_percent": 20,
       "tokens": [
         0,
         0,
         0
       ],
+      "type": "major",
       "color": "cyan"
     },
     {
       "sym": "GTR",
       "name": "Grand Trunk Railway",
       "logo": "1867/GTR",
+      "float_percent": 20,
       "tokens": [
         0,
         0,
         0
       ],
+      "type": "major",
       "color": "orange"
     },
     {
       "sym": "GWR",
       "name": "Great Western Railway",
       "logo": "1867/GWR",
+      "float_percent": 20,
       "tokens": [
         0,
         0,
         0
       ],
+      "type": "major",
       "color": "brown"
     },
     {
       "sym": "ICR",
       "name": "Intercolonial Railway",
       "logo": "1867/ICR",
+      "float_percent": 20,
       "tokens": [
         0,
         0,
         0
       ],
+      "type": "major",
       "color": "yellow"
     },
     {
       "sym": "NTR",
       "name": "National Transcontinental Railway",
       "logo": "1867/NTR",
+      "float_percent": 20,
       "tokens": [
         0,
         0,
@@ -313,11 +326,13 @@ module Engine
       "sym": "NYC",
       "name": "New York Central Railroad",
       "logo": "1867/NYC",
+      "float_percent": 20,
       "tokens": [
         0,
         0,
         0
       ],
+      "type": "major",
       "color": "black"
     },
     {
@@ -327,6 +342,9 @@ module Engine
       "tokens": [
         0
       ],
+      "type": "minor",
+      "shares": [100],
+      "max_ownership_percent": 100,
       "color": "yellow"
     },
     {
@@ -336,6 +354,9 @@ module Engine
       "tokens": [
         0
       ],
+      "shares": [100],
+      "max_ownership_percent": 100,
+      "type": "minor",
       "color": "yellow"
     },
     {
@@ -345,6 +366,9 @@ module Engine
       "tokens": [
         0
       ],
+      "shares": [100],
+      "max_ownership_percent": 100,
+      "type": "minor",
       "color": "yellow"
     },
     {
@@ -354,6 +378,9 @@ module Engine
       "tokens": [
         0
       ],
+      "shares": [100],
+      "max_ownership_percent": 100,
+      "type": "minor",
       "color": "yellow"
     },
     {
@@ -363,6 +390,9 @@ module Engine
       "tokens": [
         0
       ],
+      "shares": [100],
+      "max_ownership_percent": 100,
+      "type": "minor",
       "color": "yellow"
     },
     {
@@ -372,6 +402,9 @@ module Engine
       "tokens": [
         0
       ],
+      "shares": [100],
+      "max_ownership_percent": 100,
+      "type": "minor",
       "color": "yellow"
     },
     {
@@ -381,6 +414,9 @@ module Engine
       "tokens": [
         0
       ],
+      "shares": [100],
+      "max_ownership_percent": 100,
+      "type": "minor",
       "color": "yellow"
     },
     {
@@ -390,6 +426,9 @@ module Engine
       "tokens": [
         0
       ],
+      "shares": [100],
+      "max_ownership_percent": 100,
+      "type": "minor",
       "color": "yellow"
     },
     {
@@ -399,6 +438,9 @@ module Engine
       "tokens": [
         0
       ],
+      "shares": [100],
+      "max_ownership_percent": 100,
+      "type": "minor",
       "color": "yellow"
     },
     {
@@ -408,6 +450,9 @@ module Engine
       "tokens": [
         0
       ],
+      "shares": [100],
+      "max_ownership_percent": 100,
+      "type": "minor",
       "color": "yellow"
     },
     {
@@ -417,6 +462,9 @@ module Engine
       "tokens": [
         0
       ],
+      "shares": [100],
+      "max_ownership_percent": 100,
+      "type": "minor",
       "color": "green"
     },
     {
@@ -426,6 +474,9 @@ module Engine
       "tokens": [
         0
       ],
+      "shares": [100],
+      "max_ownership_percent": 100,
+      "type": "minor",
       "color": "green"
     },
     {
@@ -435,6 +486,9 @@ module Engine
       "tokens": [
         0
       ],
+      "shares": [100],
+      "max_ownership_percent": 100,
+      "type": "minor",
       "color": "green"
     },
     {
@@ -444,6 +498,9 @@ module Engine
       "tokens": [
         0
       ],
+      "shares": [100],
+      "max_ownership_percent": 100,
+      "type": "minor",
       "color": "green"
     },
     {
@@ -453,6 +510,9 @@ module Engine
       "tokens": [
         0
       ],
+      "shares": [100],
+      "max_ownership_percent": 100,
+      "type": "minor",
       "color": "green"
     },
     {
@@ -462,23 +522,10 @@ module Engine
       "tokens": [
         0
       ],
+      "shares": [100],
+      "max_ownership_percent": 100,
+      "type": "minor",
       "color": "green"
-    },
-    {
-      "sym": "CN",
-      "name": "Canadian National",
-      "logo": "1867/CN",
-      "tokens": [
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0
-      ],
-      "color": "white"
     }
   ],
   "trains": [
@@ -494,26 +541,39 @@ module Engine
       "distance": 3,
       "price": 225,
       "rusts_on": "6",
-      "num": 7
+      "num": 7,
+      "events":[
+        {"type": "green_minors_available"}
+      ]
     },
     {
       "name": "4",
       "distance": 4,
       "price": 350,
       "rusts_on": "8",
-      "num": 4
+      "num": 4,
+      "events":[
+        {"type": "majors_can_ipo"}
+      ]
     },
     {
       "name": "5",
       "distance": 5,
       "price": 550,
-      "num": 4
+      "num": 4,
+      "events":[
+        {"type": "minors_cannot_start"}
+      ]
+
     },
     {
       "name": "6",
       "distance": 6,
       "price": 650,
-      "num": 2
+      "num": 2,
+      "events":[
+        {"type": "close_companies"}
+      ]
     },
     {
       "name": "7",
@@ -525,19 +585,26 @@ module Engine
       "name": "8",
       "distance": 8,
       "price": 1000,
-      "num": 6
+      "num": 6,
+      "events": [
+        {"type": "signal_end_game"},
+        {"type": "minors_nationalized"}
+
+      ]
     },
     {
       "name": "2+2",
       "distance": 2,
       "price": 600,
-      "num": 6
+      "num": 6,
+      "available_on": "8"
     },
     {
       "name": "5+5E",
       "distance": 5,
       "price": 1500,
-      "num": 7
+      "num": 7,
+      "available_on": "8"
     }
   ],
   "hexes": {
@@ -634,13 +701,13 @@ module Engine
       ]
     },
     "gray": {
-      "city=revenue:40;path=a:0,b:_0;path=a:1,b:_0;path=a:4,b:_0;path=a:5,b:_0": [
+      "city=revenue:40;path=a:0,b:_0;path=a:1,b:_0;path=a:4,b:_0;path=a:5,b:_0;border=edge:1;border=edge:4": [
         "D2"
       ],
-      "path=a:0,b:4": [
+      "path=a:0,b:4;border=edge:4": [
         "C3"
       ],
-      "path=a:1,b:5": [
+      "path=a:1,b:5;border=edge:1": [
         "E1"
       ],
       "path=a:0,b:5": [
@@ -651,10 +718,10 @@ module Engine
       ]
     },
     "yellow": {
-      "city=revenue:40;city=revenue:40;city=revenue:40;path=a:1,b:_0;path=a:3,b:_0;label=M;upgrade=cost:20,terrain:water": [
+      "city=revenue:40;city=revenue:40;city=revenue:40,loc:5;path=a:1,b:_0;path=a:3,b:_1;label=M;upgrade=cost:20,terrain:water": [
         "L12"
       ],
-      "city=revenue:30;city=revenue:30;path=a:1,b:_0;path=a:4,b:_0;label=T": [
+      "city=revenue:30;city=revenue:30;path=a:1,b:_0;path=a:4,b:_1;label=T": [
         "F16"
       ]
     },
@@ -692,129 +759,106 @@ module Engine
   },
   "phases": [
     {
+      "name": "2",
+      "train_limit": {
+        "minor": 2
+      },
+      "tiles": [
+        "yellow"
+      ],
+      "operating_rounds": 2
+    },
+    {
       "name": "3",
-      "train_limit": 4,
+      "train_limit": {
+        "minor": 2,
+        "major": 4
+      },
       "tiles": [
         "yellow",
         "green"
-      ]
+      ],
+      "status":[
+        "can_buy_companies"
+      ],
+      "on": "3",
+      "operating_rounds": 2
     },
     {
       "name": "4",
-      "train_limit": 3,
+      "train_limit": {
+        "minor": 1,
+        "major": 3
+      },
       "tiles": [
         "yellow",
         "green"
-      ]
+      ],
+      "status":[
+        "can_buy_companies"
+      ],
+      "on": "4",
+      "operating_rounds": 2
     },
     {
       "name": "5",
-      "train_limit": 3,
+      "train_limit": {
+        "minor": 1,
+        "major": 3
+      },
       "tiles": [
         "yellow",
         "green",
         "brown"
-      ]
+      ],
+      "status":[
+        "can_buy_companies"
+      ],
+      "on": "5",
+      "operating_rounds": 2
     },
     {
       "name": "6",
-      "train_limit": 2,
+      "train_limit": {
+        "minor": 1,
+        "major": 2
+      },
       "tiles": [
         "yellow",
         "green",
         "brown"
-      ]
+      ],
+      "on": "6",
+      "operating_rounds": 2
     },
     {
       "name": "7",
-      "train_limit": 2,
+      "train_limit": {
+        "minor": 1,
+        "major": 2
+      },
       "tiles": [
         "yellow",
         "green",
         "brown",
         "gray"
-      ]
+      ],
+      "on": "7",
+      "operating_rounds": 2
     },
     {
       "name": "8",
-      "train_limit": 2,
+      "train_limit":  {
+        "major": 2
+      },
       "tiles": [
         "yellow",
         "green",
         "brown",
         "gray"
-      ]
-    },
-    {
-      "name": "2+2",
-      "train_limit": 2,
-      "tiles": [
-        "yellow",
-        "green",
-        "brown",
-        "gray"
-      ]
-    },
-    {
-      "name": "5+5E",
-      "train_limit": 2,
-      "tiles": [
-        "yellow",
-        "green",
-        "brown",
-        "gray"
-      ]
-    },
-    {
-      "name": "2",
-      "train_limit": 2,
-      "tiles": [
-        "yellow"
-      ]
-    },
-    {
-      "name": "3",
-      "train_limit": 2,
-      "tiles": [
-        "yellow",
-        "green"
-      ]
-    },
-    {
-      "name": "4",
-      "train_limit": 1,
-      "tiles": [
-        "yellow",
-        "green"
-      ]
-    },
-    {
-      "name": "5",
-      "train_limit": 1,
-      "tiles": [
-        "yellow",
-        "green",
-        "brown"
-      ]
-    },
-    {
-      "name": "6",
-      "train_limit": 1,
-      "tiles": [
-        "yellow",
-        "green",
-        "brown"
-      ]
-    },
-    {
-      "name": "7",
-      "train_limit": 1,
-      "tiles": [
-        "yellow",
-        "green",
-        "brown",
-        "gray"
-      ]
+      ],
+      "on": "8",
+      "operating_rounds": 2
     }
   ]
 }
